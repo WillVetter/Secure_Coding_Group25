@@ -7,10 +7,18 @@
 #include <errno.h>
 #include <crypt.h>
 
-account_t *account_create(const char *userid,
-                          const char *plaintext_password,
-                          const char *email,
-                          const char *birthdate)
+/**
+ * Create a new account with the specified parameters.
+ *
+ * This function initializes a new dynamically allocated account structure
+ * with the given user ID, hash information derived from the specified plaintext password, email address,
+ * and birthdate. Other fields are set to their default values.
+ *
+ * On success, returns a pointer to the newly created account structure.
+ * On error, returns NULL and logs an error message.
+ */
+account_t *account_create(const char *userid, const char *plaintext_password, 
+  const char *email, const char *birthdate)
 {
     if (!userid || !plaintext_password || !email || !birthdate) {
         log_message(LOG_ERROR, "account_create: NULL argument");

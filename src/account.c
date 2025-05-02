@@ -1,28 +1,82 @@
 #include "account.h"
+#include "logging.h"
 
-/**
- * Create a new account with the specified parameters.
- *
- * This function initializes a new dynamically allocated account structure
- * with the given user ID, hash information derived from the specified plaintext password, email address,
- * and birthdate. Other fields are set to their default values.
- *
- * On success, returns a pointer to the newly created account structure.
- * On error, returns NULL and logs an error message.
- */
-account_t *account_create(const char *userid, const char *plaintext_password,
-                          const char *email, const char *birthdate
-                      )
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <errno.h>
+#include <crypt.h>
+
+account_t *account_create(const char *userid,
+                          const char *plaintext_password,
+                          const char *email,
+                          const char *birthdate)
 {
-  // remove the contents of this function and replace it with your own code.
-  (void) userid;
-  (void) plaintext_password;
-  (void) email;
-  (void) birthdate;
+    if (!userid || !plaintext_password || !email || !birthdate) {
+        log_message(LOG_ERROR, "account_create: NULL argument");
+        return NULL;
+    }
 
-  return NULL;
+    size_t uid_len = strlen(userid);
+    if (uid_len == 0 || uid_len >= USER_ID_LENGTH) {
+        log_message(LOG_ERROR, "account_create: invalid userid length");
+        return NULL;
+    }
+
+    size_t em_len = strlen(email);
+    if (em_len == 0 || em_len >= EMAIL_LENGTH) {
+        log_message(LOG_ERROR, "account_create: invalid email length");
+        return NULL;
+    }
+
+    for (size_t i = 0; i < em_len; ++i) {
+        unsigned char c = (unsigned char)email[i];
+        if (!isprint(c) || isspace(c)) {
+            log_message(LOG_ERROR, "account_create: invalid email format");
+            return NULL;
+        }
+    }
+
+    if (strlen(birthdate) != 10 || birthdate[4] != '-' || birthdate[7] != '-') {
+        log_message(LOG_ERROR, "account_create: invalid birthdate format");
+        return NULL;
+    }
+    for (int i = 0; i < 10; ++i) {
+        if (i == 4 || i == 7) continue;
+        if (!isdigit((unsigned char)birthdate[i])) {
+            log_message(LOG_ERROR, "account_create: invalid birthdate digits");
+            return NULL;
+        }
+    }
+
+    char *hash = hash_password(plaintext_password);
+    if (!hash) {
+        log_message(LOG_ERROR, "account_create: password hashing returned NULL");
+        return NULL;
+    }
+
+    account_t *acc = calloc(1, sizeof(*acc));
+    if (!acc) {
+        log_message(LOG_ERROR, "account_create: allocation failed: %s", strerror(errno));
+        free(hash);
+        return NULL;
+    }
+
+    strncpy(acc->userid, userid, USER_ID_LENGTH);
+    acc->userid[USER_ID_LENGTH - 1] = '\0';
+
+    strncpy(acc->password_hash, hash, HASH_LENGTH);
+    acc->password_hash[HASH_LENGTH - 1] = '\0';
+    free(hash);
+
+    strncpy(acc->email, email, EMAIL_LENGTH);
+    acc->email[EMAIL_LENGTH - 1] = '\0';
+
+    strncpy(acc->birthdate, birthdate, BIRTHDATE_LENGTH);
+    acc->birthdate[BIRTHDATE_LENGTH - 1] = '\0';
+
+    return acc;
 }
-
 
 void account_free(account_t *acc) {
   // remove the contents of this function and replace it with your own code.

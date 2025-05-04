@@ -87,10 +87,13 @@ account_t *account_create(const char *userid, const char *plaintext_password,
 }
 
 void account_free(account_t *acc) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-}
+    if (!acc) return;
 
+    // Free dynamically allocated fields if they exist
+    if (acc->last_login_ip) free(acc->last_login_ip);
+
+    free(acc);
+}
 
 bool account_validate_password(const account_t *acc, const char *plaintext_password) {
   // remove the contents of this function and replace it with your own code.
@@ -107,10 +110,16 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
 }
 
 void account_record_login_success(account_t *acc, ip4_addr_t ip) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-  (void) ip;
+    if (!acc) return;
+
+    acc->login_failures = 0;
+    acc->last_login_ip = ip;
+    acc->last_login_time = time(NULL);
+
+    log_message(LOG_INFO, "Successful login for user %s from %s",
+                acc->userid, ip4_addr_to_str(ip));
 }
+
 
 void account_record_login_failure(account_t *acc) {
   // remove the contents of this function and replace it with your own code.
@@ -136,9 +145,8 @@ void account_set_unban_time(account_t *acc, time_t t) {
 }
 
 void account_set_expiration_time(account_t *acc, time_t t) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-  (void) t;
+    if (!acc) return;
+    acc->expiration_time = t;
 }
 
 void account_set_email(account_t *acc, const char *new_email) {

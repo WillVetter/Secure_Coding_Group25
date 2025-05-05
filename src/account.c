@@ -95,12 +95,29 @@ void account_free(account_t *acc) {
     free(acc);
 }
 
-bool account_validate_password(const account_t *acc, const char *plaintext_password) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-  (void) plaintext_password;
-  return false;
+bool account_validate_password(const account_t *acc, const char *plaintext_password) { 
+
+  //check acc and plaintext are non null, plaintext valid null terminated string
+  if (!acc || !plaintext_password ) {
+        log_message(LOG_ERROR, "account_validate_password: NULL argument");
+        return NULL;
+  }
+
+  char *hash = hash_password(plaintext_password);
+
+  for (unsigned long i = 0; i < strlen(acc->password_hash); i++){ 
+    if (hash[i] != acc->password_hash[i]) {
+      log_message(LOG_ERROR, "account_validate_password: incorrect password");
+      free(hash); 
+      return false; 
+    } 
+  }
+
+  log_message(LOG_ERROR, "account_validate_password: correct password");
+  free(hash);
+  return true; 
 }
+
 
 bool account_update_password(account_t *acc, const char *new_plaintext_password) {
   // remove the contents of this function and replace it with your own code.
@@ -123,13 +140,27 @@ void account_record_login_success(account_t *acc, ip4_addr_t ip) {
 
 void account_record_login_failure(account_t *acc) {
   // remove the contents of this function and replace it with your own code.
-  (void) acc;
+  if (!acc) {
+      log_message(LOG_ERROR, "account_record_login_failure: NULL argument");
+      return;
+  }
+  acc->login_count = 0; 
 }
 
-bool account_is_banned(const account_t *acc) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-  return false;
+bool account_is_banned(const account_t *acc) { 
+
+  if (!acc) {
+      log_message(LOG_ERROR, "account_is_banned: NULL argument");
+      return NULL;
+  }
+
+  if (acc->unban_time == 0) {
+    dprintf(STDOUT_FILENO, "account is banned: %ld \n", acc -> unban_time);
+    return false; 
+  } 
+  else {
+    return true; 
+  }
 }
 
 bool account_is_expired(const account_t *acc) {
@@ -150,10 +181,30 @@ void account_set_expiration_time(account_t *acc, time_t t) {
 }
 
 void account_set_email(account_t *acc, const char *new_email) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-  (void) new_email;
+
+  if (!acc || !new_email ) {
+        log_message(LOG_ERROR, "account_set_email: NULL argument");
+        return;
+  }
+
+  size_t em_len = strlen(new_email);
+  if (em_len == 0 || em_len >= EMAIL_LENGTH) {
+      log_message(LOG_ERROR, "account_set_email: invalid email length");
+      return;
+  }
+
+  for (size_t i = 0; i < em_len; ++i) {
+      unsigned char c = (unsigned char)new_email[i];
+      if (!isprint(c) || isspace(c)) {
+          log_message(LOG_ERROR, "account_set_email: invalid email format");
+          return;
+      }
+  }
+
+  strncpy(acc->email, new_email, EMAIL_LENGTH);
+  acc->email[EMAIL_LENGTH - 1] = '\0';
 }
+
 
 bool account_print_summary(const account_t *acct, int fd) {
   // remove the contents of this function and replace it with your own code.

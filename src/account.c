@@ -90,7 +90,7 @@ void account_free(account_t *acc) {
     if (!acc) return;
 
     // Free dynamically allocated fields if they exist
-    if (acc->last_login_ip) free(acc->last_login_ip);
+    if (acc->last_ip) {};// free(acc->last_ip); // Or did you mean to use last_login_time?
 
     free(acc);
 }
@@ -129,12 +129,12 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
 void account_record_login_success(account_t *acc, ip4_addr_t ip) {
     if (!acc) return;
 
-    acc->login_failures = 0;
-    acc->last_login_ip = ip;
+    acc->login_fail_count = 0;
+    acc->last_ip = ip;
     acc->last_login_time = time(NULL);
 
-    log_message(LOG_INFO, "Successful login for user %s from %s",
-                acc->userid, ip4_addr_to_str(ip));
+    log_message(LOG_INFO, "Successful login for user %s from %i",
+                acc->userid, ip);
 }
 
 
@@ -155,7 +155,7 @@ bool account_is_banned(const account_t *acc) {
   }
 
   if (acc->unban_time == 0) {
-    dprintf(STDOUT_FILENO, "account is banned: %ld \n", acc -> unban_time);
+    log_message(LOG_INFO, "account is banned: %ld \n", acc->unban_time);
     return false; 
   } 
   else {

@@ -25,8 +25,6 @@
 * @return a string containing the hashed password, or NULL on failiure
 */ 
 
-#define HASH_LENGTH crypto_pwhash_STRBYTES
-
 char* hashPassword(const char* plaintext_password) {
 
   if (!plaintext_password) {
@@ -50,8 +48,7 @@ char* hashPassword(const char* plaintext_password) {
       strlen(plaintext_password),
       // Potentially different limits? 
       crypto_pwhash_OPSLIMIT_MODERATE,
-      crypto_pwhash_MEMLIMIT_MODERATE,
-      crypto_pwhash_ALG_ARGON2ID13) != 0) {
+      crypto_pwhash_MEMLIMIT_MODERATE) != 0) {
       log_message(LOG_ERROR, "hash_password: password hashing failed");
     free(hashed_password);
     return NULL;

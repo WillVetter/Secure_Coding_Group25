@@ -136,6 +136,7 @@ void account_free(account_t *acc) {
     free(acc);
 }
 
+
 /**
 * @brief Validate the plaintext password with the hash currently stored for an account. 
 * @param acc The account the password is being validated against.
@@ -198,25 +199,44 @@ void account_record_login_success(account_t *acc, ip4_addr_t ip) {
 
 void account_record_login_failure(account_t *acc) {
   // remove the contents of this function and replace it with your own code.
-  (void) acc;
+  if (!acc) {
+      log_message(LOG_ERROR, "account_record_login_failure: NULL argument");
+      return;
+  }
+  acc->login_count = 0; 
 }
 
-bool account_is_banned(const account_t *acc) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-  return false;
+bool account_is_banned(const account_t *acc) { 
+
+  if (!acc) {
+      log_message(LOG_ERROR, "account_is_banned: NULL argument");
+      return NULL;
+  }
+
+  if (acc->unban_time == 0) {
+    dprintf(STDOUT_FILENO, "account is banned: %ld \n", acc -> unban_time);
+    return false; 
+  } 
+  else {
+    return true; 
+  }
 }
 
 bool account_is_expired(const account_t *acc) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
+  time_t current_time = time(NULL);
+  if (acc->expiration_time != 0 && current_time >= acc->expiration_time) {
+      log_message(LOG_INFO, "account_is_expired: Account %s is expired", acc->userid);
+      return true;
+  }
+
   return false;
 }
 
 void account_set_unban_time(account_t *acc, time_t t) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-  (void) t;
+  acc->unban_time = t;
+
+  log_message(LOG_INFO, "account_set_unban_time: Unban time set to %ld for user %s", 
+              (long)t, acc->userid);
 }
 
 void account_set_expiration_time(account_t *acc, time_t t) {
@@ -225,15 +245,71 @@ void account_set_expiration_time(account_t *acc, time_t t) {
 }
 
 void account_set_email(account_t *acc, const char *new_email) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-  (void) new_email;
+
+  if (!acc || !new_email ) {
+        log_message(LOG_ERROR, "account_set_email: NULL argument");
+        return;
+  }
+
+  size_t em_len = strlen(new_email);
+  if (em_len == 0 || em_len >= EMAIL_LENGTH) {
+      log_message(LOG_ERROR, "account_set_email: invalid email length");
+      return;
+  }
+
+  for (size_t i = 0; i < em_len; ++i) {
+      unsigned char c = (unsigned char)new_email[i];
+      if (!isprint(c) || isspace(c)) {
+          log_message(LOG_ERROR, "account_set_email: invalid email format");
+          return;
+      }
+  }
+
+  strncpy(acc->email, new_email, EMAIL_LENGTH);
+  acc->email[EMAIL_LENGTH - 1] = '\0';
 }
+
 
 bool account_print_summary(const account_t *acct, int fd) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acct;
-  (void) fd;
-  return false;
-}
+  if (!acct) {
+      log_message(LOG_ERROR, "account_print_summary: NULL account pointer");
+      return false;
+  }
 
+  if (fd < 0) {
+      log_message(LOG_ERROR, "account_print_summary: Invalid file descriptor");
+      return false;
+  }
+
+  // Format the summary
+  char summary[512];
+  int written = snprintf(summary, sizeof(summary),
+      "User ID: %s\n"
+      "Email: %s\n"
+      "Login Failures: %d\n"
+      "Last Login Time: %ld\n"
+      "Last Login IP: %s\n"
+      "Unban Time: %ld\n"
+      "Expiration Time: %ld\n",
+      acct->userid,
+      acct->email,
+      acct->login_failures,
+      (long)acct->last_login_time,
+      acct->last_login_ip ? ip4_addr_to_str(acct->last_login_ip) : "N/A",
+      (long)acct->unban_time,
+      (long)acct->expiration_time
+  );
+
+  if (written < 0 || (size_t)written >= sizeof(summary)) {
+      log_message(LOG_ERROR, "account_print_summary: Failed to format summary");
+      return false;
+  }
+
+  // Write the summary to the file descriptor
+  if (write(fd, summary, written) != written) {
+      log_message(LOG_ERROR, "account_print_summary: Failed to write summary to file descriptor");
+      return false;
+  }
+
+  return true;
+}

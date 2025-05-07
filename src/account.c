@@ -6,6 +6,7 @@
 #include <ctype.h>
 #include <errno.h>
 #include <crypt.h>
+#include <sodium.h>
 
 /**
  * Create a new account with the specified parameters.
@@ -17,6 +18,45 @@
  * On success, returns a pointer to the newly created account structure.
  * On error, returns NULL and logs an error message.
  */
+
+/** 
+* @brief Hash a plaintext password using Argon2id.
+* @param plaintext_password The plaintext password to hash.
+* @return a string containing the hashed password, or NULL on failiure
+*/ 
+
+char* hashPassword(const char* plaintext_password) {
+
+  if (!plaintext_password) {
+    log_message(LOG_ERROR, "hash_password: NULL password provided");
+    return NULL;
+  }
+
+  if (sodium_init() < 0) {
+    log_message(LOG_ERROR, "Failed to hash password: libsodium initialization failed");
+    return NULL;
+  }
+  char* hashed_password = malloc(crypto_pwhash_STRBYTES);
+  if (!hashed_password) {
+    log_message(LOG_ERROR, "Failed to hash password: memory allocation failed");
+    return NULL;
+  }
+  
+  if (crypto_pwhash_str(
+      hashed_password,
+      plaintext_password,
+      strlen(plaintext_password),
+      // Potentially different limits? 
+      crypto_pwhash_OPSLIMIT_MODERATE,
+      crypto_pwhash_MEMLIMIT_MODERATE) != 0) {
+      log_message(LOG_ERROR, "hash_password: password hashing failed");
+    free(hashed_password);
+    return NULL;
+  }
+
+  return hashed_password;
+}
+
 account_t *account_create(const char *userid, const char *plaintext_password, 
   const char *email, const char *birthdate)
 {
@@ -57,7 +97,8 @@ account_t *account_create(const char *userid, const char *plaintext_password,
         }
     }
 
-    char *hash = hash_password(plaintext_password);
+    char *hash = hashPassword(plaintext_password);
+    // Perhaps should retry hash rather than fail?
     if (!hash) {
         log_message(LOG_ERROR, "account_create: password hashing returned NULL");
         return NULL;
@@ -95,35 +136,53 @@ void account_free(account_t *acc) {
     free(acc);
 }
 
-bool account_validate_password(const account_t *acc, const char *plaintext_password) { 
 
-  //check acc and plaintext are non null, plaintext valid null terminated string
-  if (!acc || !plaintext_password ) {
-        log_message(LOG_ERROR, "account_validate_password: NULL argument");
-        return NULL;
+/**
+* @brief Validate the plaintext password with the hash currently stored for an account. 
+* @param acc The account the password is being validated against.
+* @param plaintext_password The plaintext password to validate.
+* @return true if the password matches, false otherwise.
+*/
+bool account_validate_password(const account_t *acc, const char *plaintext_password) {
+  if (!acc || !plaintext_password) {
+    log_message(LOG_ERROR, "account_validate_password: NULL argument provided");
+    return false;
+  }
+  if (crypto_pwhash_str_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) != 0) {
+    log_message(LOG_WARNING, "account_validate_password: password verification failed for user %s", acc->userid);
+    return false;
   }
 
-  char *hash = hash_password(plaintext_password);
-
-  for (unsigned long i = 0; i < strlen(acc->password_hash); i++){ 
-    if (hash[i] != acc->password_hash[i]) {
-      log_message(LOG_ERROR, "account_validate_password: incorrect password");
-      free(hash); 
-      return false; 
-    } 
-  }
-
-  log_message(LOG_ERROR, "account_validate_password: correct password");
-  free(hash);
-  return true; 
+  log_message(LOG_INFO, "account_validate_password: password verification succeeded for user %s", acc->userid);
+  return true;
 }
 
-
+/**
+* @brief Update the password for an account with a new plaintext password.
+* @param acc The account to update.
+* @param new_plaintext_password The new plaintext password to set.
+* @return true on success, false on failure.
+*/
 bool account_update_password(account_t *acc, const char *new_plaintext_password) {
-  // remove the contents of this function and replace it with your own code.
-  (void) acc;
-  (void) new_plaintext_password;
-  return false;
+  if (!acc || !new_plaintext_password) {
+    log_message(LOG_ERROR, "account_update_password: NULL argument provided");
+    return false;
+  }
+
+  char *new_hash = hashPassword(new_plaintext_password);
+  if (!new_hash) {
+    log_message(LOG_ERROR, "account_update_password: password hashing failed for user %s", acc->userid);
+    return false;
+  }
+
+  strncpy(acc->password_hash, new_hash, HASH_LENGTH);
+  acc->password_hash[HASH_LENGTH - 1] = '\0';
+
+  free(new_hash);
+
+  log_message(LOG_INFO, "account_update_password: password updated successfully for user %s", acc->userid);
+  return true;
+  
 }
 
 void account_record_login_success(account_t *acc, ip4_addr_t ip) {

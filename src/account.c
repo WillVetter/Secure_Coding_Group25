@@ -87,13 +87,14 @@ account_t *account_create(const char *userid, const char *plaintext_password,
 }
 
 void account_free(account_t *acc) {
-    if (!acc) return;
-
-    // Free dynamically allocated fields if they exist
-    if (acc->last_login_ip) free(acc->last_login_ip);
+    if (acc == NULL) {
+        return;
+    }
 
     free(acc);
+    log_message(LOG_DEBUG, "Account freed from memory.\n");
 }
+
 
 bool account_validate_password(const account_t *acc, const char *plaintext_password) {
   // remove the contents of this function and replace it with your own code.

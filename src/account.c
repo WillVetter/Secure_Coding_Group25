@@ -11,7 +11,6 @@
 
 //Remove below if not needed (only used for logging)
 #include <arpa/inet.h>
-#include "banned.h"
 
 
 /**
@@ -197,7 +196,16 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
 }
 
 void account_record_login_success(account_t *acc, ip4_addr_t ip) {
-    if (!acc) return;
+    if (!acc) {
+        log_message(LOG_ERROR, "account_record_login_success: NULL argument");
+        return;
+    }
+
+    // Check if the account is locked when login_fail_count >= 10
+    if (acc->login_fail_count >= 10) {
+        log_message(LOG_WARN, "account_record_login_success: Login attempt blocked due to too many failed attempts for user %s", acc->userid);
+        return; // Block the login attempt
+    }
 
     acc->login_fail_count = 0;
     acc->last_ip = ip;

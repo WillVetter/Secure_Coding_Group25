@@ -5,17 +5,14 @@
 #include <sodium.h>
 #include "logging.h"
 
-#include <stdio.h>
 #include <stdarg.h>
-#include "logging.h"
 
-// Tests account_is_banned, account_is_expired, account_record_login_success, account_record_login_failure are:
-// (1) acc must be non-NULL.
+// Tests all arguments in account_set_unban_time, account_set_expiration_time, account_is_banned, account_is_expired are:
+// (1) acc must be non-NULL
 
 // RUN in the terminal:
 // gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_account_status tests/test_account_status.c src/account.c -Isrc -lsodium
 // ./test_account_status
-
 
 void log_message(log_level_t level, const char *fmt, ...) {
     const char *level_str;
@@ -46,19 +43,18 @@ void log_message(log_level_t level, const char *fmt, ...) {
     printf("\n");
 }
 
-
 int main() {
     account_t *account;
 
     printf("Test 1: Check banned status for a banned account\n");
-    account = account_create("testuser", "password123", "test@example.com", "1990-01-01");
+    account = account_create("testuser", "password123", "test@example.com", "2000-01-01");
     if (!account) {
         printf("FAIL: Account creation failed unexpectedly\n");
         return 1;
     }
 
     // Banned account
-    account->unban_time = time(NULL) + 100; // Unban time is after 100 seconds
+    account_set_unban_time(account, time(NULL) + 100); // Unban time is after 100 seconds
     if (account_is_banned(account)) {
         printf("PASS: Account is correctly banned\n");
     } else {
@@ -66,7 +62,7 @@ int main() {
     }
 
     // Unbanned account
-    account->unban_time = time(NULL) - 60; // Unban time passed 100 seconds ago
+    account_set_unban_time(account, time(NULL) - 100); // Unban time passed 100 seconds ago
     if (!account_is_banned(account)) {
         printf("PASS: Account is correctly not banned\n");
     } else {
@@ -75,19 +71,34 @@ int main() {
 
     printf("\nTest 2: Check expired status for an expired account\n");
     // Expired account
-    account->expiration_time = time(NULL) - 100; // Expiration time passed 100 seconds ago
+    account_set_expiration_time(account, time(NULL) - 100); // Expiration time passed 100 seconds ago
     if (account_is_expired(account)) {
         printf("PASS: Account is correctly expired\n");
     } else {
         printf("FAIL: Account is not expired\n");
     }
 
-    // Simulate a non-expired account
-    account->expiration_time = time(NULL) + 100; // Expiration time is after 100 seconds
+    // Non-expired account
+    account_set_expiration_time(account, time(NULL) + 100); // Expiration time is after 100 seconds
     if (!account_is_expired(account)) {
         printf("PASS: Account is correctly not expired\n");
     } else {
         printf("FAIL: Account is incorrectly expired\n");
+    }
+
+    printf("\nTest 3: Check banned and expired status for NULL account\n");
+    // Test banned status with NULL account
+    if (!account_is_banned(NULL)) {
+        printf("PASS: account_is_banned correctly handled NULL account\n");
+    } else {
+        printf("FAIL: account_is_banned did not handle NULL account correctly\n");
+    }
+
+    // Test expired status with NULL account
+    if (!account_is_expired(NULL)) {
+        printf("PASS: account_is_expired correctly handled NULL account\n");
+    } else {
+        printf("FAIL: account_is_expired did not handle NULL account correctly\n");
     }
 
     account_free(account);

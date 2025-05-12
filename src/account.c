@@ -11,6 +11,7 @@
 
 //Remove below if not needed (only used for logging)
 #include <arpa/inet.h>
+#include "banned.h"
 
 
 /**
@@ -224,19 +225,26 @@ bool account_is_banned(const account_t *acc) {
 
   if (!acc) {
       log_message(LOG_ERROR, "account_is_banned: NULL argument");
-      return NULL;
+      return false;
   }
 
-  if (acc->unban_time == 0) {
+  time_t now = time(NULL);
+  if (acc->unban_time > now) {
     log_message(LOG_INFO, "account is banned: %ld \n", acc->unban_time);
-    return false; 
+    return true; 
   } 
   else {
-    return true; 
+    log_message(LOG_INFO, "account_is_banned: Account is not banned (unban_time: %ld, current time: %ld)", acc->unban_time, now);
+    return false; 
   }
 }
 
 bool account_is_expired(const account_t *acc) {
+   if (!acc) {
+        log_message(LOG_ERROR, "account_is_expired: NULL argument");
+        return false;
+    }
+  
   time_t current_time = time(NULL);
   if (acc->expiration_time != 0 && current_time >= acc->expiration_time) {
       log_message(LOG_INFO, "account_is_expired: Account %s is expired", acc->userid);

@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <crypt.h>
 #include <sodium.h>
+#include <unistd.h>
 
 //Remove below if not needed (only used for logging)
 #include <arpa/inet.h>
@@ -152,7 +153,7 @@ bool account_validate_password(const account_t *acc, const char *plaintext_passw
     return false;
   }
   if (crypto_pwhash_str_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) != 0) {
-    log_message(LOG_WARNING, "account_validate_password: password verification failed for user %s", acc->userid);
+    log_message(LOG_ERROR, "account_validate_password: password verification failed for user %s", acc->userid);
     return false;
   }
 
@@ -289,19 +290,26 @@ bool account_print_summary(const account_t *acct, int fd) {
 
   // Format the summary
   char summary[512];
+  char ip_str[INET_ADDRSTRLEN] = "N/A"; // Default to "N/A" if IP is not set
+
+  // Convert last_login_ip to a string if it is valid
+  if (acct->last_ip != 0) {
+      inet_ntop(AF_INET, &acct->last_ip, ip_str, INET_ADDRSTRLEN);
+  }
+
   int written = snprintf(summary, sizeof(summary),
       "User ID: %s\n"
       "Email: %s\n"
-      "Login Failures: %d\n"
+      "Login Failures: %u\n"
       "Last Login Time: %ld\n"
       "Last Login IP: %s\n"
       "Unban Time: %ld\n"
       "Expiration Time: %ld\n",
       acct->userid,
       acct->email,
-      acct->login_failures,
+      acct->login_fail_count, // Corrected field name
       (long)acct->last_login_time,
-      acct->last_login_ip ? ip4_addr_to_str(acct->last_login_ip) : "N/A",
+      ip_str, // Corrected IP conversion
       (long)acct->unban_time,
       (long)acct->expiration_time
   );

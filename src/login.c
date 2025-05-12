@@ -1,7 +1,13 @@
+#define _POSIX_C_SOURCE 200809L
+#include <string.h>
+#include <unistd.h>
+#include <time.h>
+#include <arpa/inet.h>
+
 #include "login.h"
 #include "logging.h"
 #include "db.h"
-
+#include "banned.h"
 
 #define SESSION_DURATION_LIMIT (3600 * 5)
 #define TIMESTAMP_BUFFER 26
@@ -17,6 +23,11 @@ static void get_readable_time(time_t t, char *buffer, size_t size) {
         strncpy(buffer, "Unknown time", size);
         buffer[size - 1] = '\0';
     }
+}
+
+static void ip4_to_string(ip4_addr_t ip, char *buffer, size_t size) {
+    struct in_addr addr = { .s_addr = ip };
+    inet_ntop(AF_INET, &addr, buffer, size);
 }
 
 login_result_t handle_login(const char *userid, const char *password,
@@ -78,7 +89,6 @@ login_result_t handle_login(const char *userid, const char *password,
         return LOGIN_FAIL_BAD_PASSWORD;
     }
 
-    // If password is valid
     account_record_login_success(user_account, client_ip);
     session->account_id = user_account->account_id;
     session->session_start = user_account->last_login_time;

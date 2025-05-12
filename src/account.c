@@ -11,6 +11,7 @@
 
 //Remove below if not needed (only used for logging)
 #include <arpa/inet.h>
+#include "banned.h"
 
 /**
  * Create a new account with the specified parameters.

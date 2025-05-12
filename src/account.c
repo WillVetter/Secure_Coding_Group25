@@ -12,6 +12,7 @@
 //Remove below if not needed (only used for logging)
 #include <arpa/inet.h>
 
+
 /**
  * Create a new account with the specified parameters.
  *
@@ -57,7 +58,6 @@ char* hashPassword(const char* plaintext_password) {
     free(hashed_password);
     return NULL;
   }
-
   return hashed_password;
 }
 
@@ -66,6 +66,11 @@ account_t *account_create(const char *userid, const char *plaintext_password,
 {
     if (!userid || !plaintext_password || !email || !birthdate) {
         log_message(LOG_ERROR, "account_create: NULL argument");
+        return NULL;
+    }
+
+    if (strlen(plaintext_password) == 0) {
+        log_message(LOG_ERROR, "account_create: password cannot be empty");
         return NULL;
     }
 
@@ -152,6 +157,7 @@ bool account_validate_password(const account_t *acc, const char *plaintext_passw
     log_message(LOG_ERROR, "account_validate_password: NULL argument provided");
     return false;
   }
+
   if (crypto_pwhash_str_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) != 0) {
     log_message(LOG_ERROR, "account_validate_password: password verification failed for user %s", acc->userid);
     return false;
@@ -210,6 +216,7 @@ void account_record_login_failure(account_t *acc) {
       log_message(LOG_ERROR, "account_record_login_failure: NULL argument");
       return;
   }
+  acc->login_fail_count++;
   acc->login_count = 0; 
 }
 

@@ -10,12 +10,11 @@
 #include "logging.h"
 
 // Tests all arguments in account_validate_password, account_update_password are:
-// (1) All arguments must be valid, null-terminated strings. 
-// (2) None of the pointers may be NULL.
-// (3) Birthdate is in format YYYY-MM-DD
+// 1) acc and new_plaintext_password must be non-NULL.
+// 2) new_plaintext_password must be a valid, null-terminated string.
 
 // RUN in the terminal:
-// gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_passwords tests/test_account_create.c src/account.c -Isrc -lsodium
+// gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_passwords tests/test_passwords.c src/account.c -Isrc -lsodium
 // ./test_passwords
 
 void log_message(log_level_t level, const char *fmt, ...) {

@@ -1,5 +1,6 @@
 #include "login.h"
 #include "logging.h"
+#include "db.h"
 
 
 #define SESSION_DURATION_LIMIT (3600 * 5)

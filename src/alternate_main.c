@@ -1,3 +1,8 @@
+/**
+ * @file alternate_main.c
+ * @brief Standalone test harness for the handle_login function.
+ */
+
 #define _POSIX_C_SOURCE 200809L
 
 #include <unistd.h>
@@ -9,6 +14,10 @@
 #include "db.h"
 #include "banned.h"
 
+/**
+ * @brief Entry point of the standalone test for the login process.
+ * @return Exit code 0 on success.
+ */
 int main() {
     login_session_data_t session;
 
@@ -17,7 +26,7 @@ int main() {
     if (result == LOGIN_SUCCESS) {
         dprintf(STDOUT_FILENO, "Login successful!\n");
         dprintf(STDOUT_FILENO, "Session info:\n");
-        dprintf(STDOUT_FILENO, "  Account ID: %d\n", (int)session.account_id);  // corrected %ld → %d
+        dprintf(STDOUT_FILENO, "  Account ID: %d\n", (int)session.account_id);
         dprintf(STDOUT_FILENO, "  Start Time: %ld\n", (long)session.session_start);
         dprintf(STDOUT_FILENO, "  Expiry Time: %ld\n", (long)session.expiration_time);
     } else {

@@ -7,21 +7,28 @@
 #include "account.h"
 #include "logging.h"
 #include "db.h"
-#include "banned.h"
 
-int main() {
+int main(void) {
     login_session_data_t session;
+    time_t now = time(NULL);
+    const char *userid = "bob";
 
-    login_result_t result = handle_login("bob", "testpass", 0, time(NULL), STDOUT_FILENO, &session);
+    // Simulate 11 bad logins with wrong password
+    for (int i = 1; i <= 11; i++) {
+        dprintf(STDOUT_FILENO, "Attempt %d with bad password:\n", i);
+        login_result_t res = handle_login(userid, "wrongpass", 0, now, STDOUT_FILENO, &session);
+        if (res == LOGIN_FAIL_ACCOUNT_BANNED) {
+            dprintf(STDOUT_FILENO, "Account was banned on attempt %d.\n", i);
+            break;
+        }
+    }
 
-    if (result == LOGIN_SUCCESS) {
-        dprintf(STDOUT_FILENO, "Login successful!\n");
-        dprintf(STDOUT_FILENO, "Session info:\n");
-        dprintf(STDOUT_FILENO, "  Account ID: %d\n", (int)session.account_id);  // corrected %ld → %d
-        dprintf(STDOUT_FILENO, "  Start Time: %ld\n", (long)session.session_start);
-        dprintf(STDOUT_FILENO, "  Expiry Time: %ld\n", (long)session.expiration_time);
+    dprintf(STDOUT_FILENO, "\nNow trying the correct password (should fail if still banned):\n");
+    login_result_t final_res = handle_login(userid, "testpass", 0, now, STDOUT_FILENO, &session);
+    if (final_res == LOGIN_SUCCESS) {
+        dprintf(STDOUT_FILENO, "Logged in successfully.\n");
     } else {
-        dprintf(STDOUT_FILENO, "Login failed with result code: %d\n", result);
+        dprintf(STDOUT_FILENO, "Login failed. Result code: %d\n", final_res);
     }
 
     return 0;

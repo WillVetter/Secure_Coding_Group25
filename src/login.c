@@ -7,6 +7,7 @@
 #include "login.h"
 #include "logging.h"
 #include "db.h"
+#include "banned.h"
 
 #define SESSION_DURATION_LIMIT (3600 * 5)
 #define TIMESTAMP_BUFFER 26
@@ -27,6 +28,17 @@ static void get_readable_time(time_t t, char *buffer, size_t size) {
 static void ip4_to_string(ip4_addr_t ip, char *buffer, size_t size) {
     struct in_addr addr = { .s_addr = ip };
     inet_ntop(AF_INET, &addr, buffer, size);
+}
+
+// Getter defined in stubs.c
+extern account_t *get_bob_account_ptr(void);
+
+// Persist changes made to user account (only for "bob")
+static void db_update_account(const account_t *acc) {
+    if (!acc) return;
+    if (strncmp(acc->userid, "bob", USER_ID_LENGTH) == 0) {
+        *get_bob_account_ptr() = *acc;
+    }
 }
 
 login_result_t handle_login(const char *userid, const char *password,
@@ -65,13 +77,15 @@ login_result_t handle_login(const char *userid, const char *password,
         time_t unban_at = now + AUTO_BAN_DURATION;
         get_readable_time(unban_at, unban_str, sizeof(unban_str));
 
-        dprintf(client_output_fd, 
+        dprintf(client_output_fd,
                 "Account Banned: Too many failed login attempts. Try again after %s\n", unban_str);
         log_message(LOG_WARN, "User %s banned after excessive failures from IP %s at %s until %s\n",
                     userid, ip_str, now_str, unban_str);
 
         account_set_unban_time(user_account, unban_at);
         user_account->login_fail_count = 0;
+
+        db_update_account(user_account);
         return LOGIN_FAIL_ACCOUNT_BANNED;
     }
 
@@ -85,10 +99,13 @@ login_result_t handle_login(const char *userid, const char *password,
 
         log_message(LOG_INFO, "Login failed: Bad password for user %s from IP %s at %s\n",
                     userid, ip_str, now_str);
+
+        db_update_account(user_account);
         return LOGIN_FAIL_BAD_PASSWORD;
     }
 
     account_record_login_success(user_account, client_ip);
+
     session->account_id = user_account->account_id;
     session->session_start = user_account->last_login_time;
     session->expiration_time = user_account->last_login_time + SESSION_DURATION_LIMIT;
@@ -96,5 +113,6 @@ login_result_t handle_login(const char *userid, const char *password,
     dprintf(client_output_fd, "Login successful: Welcome %s\n", userid);
     log_message(LOG_INFO, "User %s logged in from IP %s at %s\n", userid, ip_str, now_str);
 
+    db_update_account(user_account);
     return LOGIN_SUCCESS;
 }

@@ -210,6 +210,7 @@ void account_record_login_failure(account_t *acc) {
       log_message(LOG_ERROR, "account_record_login_failure: NULL argument");
       return;
   }
+  acc-> login_fail_count++; 
   acc->login_count = 0; 
 }
 
@@ -221,7 +222,7 @@ bool account_is_banned(const account_t *acc) {
   }
 
   if (acc->unban_time == 0) {
-    log_message(LOG_INFO, "account is banned: %ld \n", acc->unban_time);
+    log_message(LOG_INFO, "account is not banned: %ld \n", acc->unban_time);
     return false; 
   } 
   else {

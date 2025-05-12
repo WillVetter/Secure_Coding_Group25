@@ -30,12 +30,13 @@ login_result_t handle_login(const char *userid, const char *password,
     get_readable_time(now, now_str, sizeof(now_str));
     ip4_to_string(client_ip, ip_str, sizeof(ip_str));
 
-    account_t *user_account = account_lookup_by_userid(userid);
-    if (!user_account) {
+    account_t user_account_buf;
+    if (!account_lookup_by_userid(userid, &user_account_buf)) {
         dprintf(client_output_fd, "Login failed: User not found\n");
         log_message(LOG_INFO, "Login failed: Unknown user %s\n", userid);
         return LOGIN_FAIL_USER_NOT_FOUND;
     }
+    account_t *user_account = &user_account_buf;
 
     if (account_is_banned(user_account)) {
         dprintf(client_output_fd, "Login failed: Account is banned\n");

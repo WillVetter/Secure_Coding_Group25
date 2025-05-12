@@ -4,6 +4,12 @@
 #include <time.h>
 #include <arpa/inet.h>
 
+#define _POSIX_C_SOURCE 200809L
+#include <string.h>
+#include <unistd.h>
+#include <time.h>
+#include <arpa/inet.h>
+
 #include "login.h"
 #include "logging.h"
 #include "db.h"
@@ -96,5 +102,6 @@ login_result_t handle_login(const char *userid, const char *password,
     dprintf(client_output_fd, "Login successful: Welcome %s\n", userid);
     log_message(LOG_INFO, "User %s logged in from IP %s at %s\n", userid, ip_str, now_str);
 
+    return LOGIN_SUCCESS;
     return LOGIN_SUCCESS;
 }

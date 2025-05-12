@@ -7,7 +7,6 @@
 #include "login.h"
 #include "logging.h"
 #include "db.h"
-#include "banned.h"
 
 #define SESSION_DURATION_LIMIT (3600 * 5)
 #define TIMESTAMP_BUFFER 26
@@ -38,7 +37,7 @@ login_result_t handle_login(const char *userid, const char *password,
     char unban_str[TIMESTAMP_BUFFER];
     char ip_str[STRINGIFY_IP_BUFFER];
 
-    time_t now = time(NULL);
+    time_t now = login_time;
     get_readable_time(now, now_str, sizeof(now_str));
     ip4_to_string(client_ip, ip_str, sizeof(ip_str));
 

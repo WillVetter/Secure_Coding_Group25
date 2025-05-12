@@ -14,35 +14,6 @@
 // gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_account_status tests/test_account_status.c src/account.c -Isrc -lsodium
 // ./test_account_status
 
-void log_message(log_level_t level, const char *fmt, ...) {
-    const char *level_str;
-    switch (level) {
-        case LOG_DEBUG:
-            level_str = "DEBUG";
-            break;
-        case LOG_INFO:
-            level_str = "INFO";
-            break;
-        case LOG_WARN:
-            level_str = "WARN";
-            break;
-        case LOG_ERROR:
-            level_str = "ERROR";
-            break;
-        default:
-            level_str = "UNKNOWN";
-            break;
-    }
-
-    printf("[%s] ", level_str);
-
-    va_list args;
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-    printf("\n");
-}
-
 int main() {
     account_t *account;
 

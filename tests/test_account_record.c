@@ -6,6 +6,7 @@
 #include "logging.h"
 
 #include <stdarg.h>
+#include "db.h"
 
 // Tests all arguments in account_record_login_success and account_record_login_failure(account_t *acc) are:
 // (1) acc must be non-NULL
@@ -13,35 +14,6 @@
 // RUN in the terminal:
 // gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_account_record tests/test_account_record.c src/account.c -Isrc -lsodium
 // ./test_account_record
-
-void log_message(log_level_t level, const char *fmt, ...) {
-    const char *level_str;
-    switch (level) {
-        case LOG_DEBUG:
-            level_str = "DEBUG";
-            break;
-        case LOG_INFO:
-            level_str = "INFO";
-            break;
-        case LOG_WARN:
-            level_str = "WARN";
-            break;
-        case LOG_ERROR:
-            level_str = "ERROR";
-            break;
-        default:
-            level_str = "UNKNOWN";
-            break;
-    }
-
-    printf("[%s] ", level_str);
-
-    va_list args;
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-    printf("\n");
-}
 
 int main() {
     printf("Testing login_fail_count functionality...\n");

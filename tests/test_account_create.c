@@ -12,6 +12,7 @@
 // Tests all arguments in account_create() are:
 // (1) All arguments must be valid, null-terminated strings. 
 // (2) None of the pointers may be NULL.
+// (3) Birthdate is in format YYYY-MM-DD
 
 // RUN in the terminal:
 // gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_account_create tests/test_account_create.c src/account.c -Isrc -lsodium
@@ -85,7 +86,16 @@ int main() {
         printf("PASS: Account creation failed as expected for NULL birthdate\n");
     }
 
-    printf("\nTest 5: Create account with empty username\n");
+    printf("Test 5: Create account with wrong format of birthdate\n");
+    account = account_create("testuser", "password123", "test@example.com", "01-01-2000");
+    if (account) {
+        printf("FAIL: Account creation succeeded unexpectedly\n");
+    } else {
+        printf("PASS: Account creation failed as expected\n");
+        account_free(account);
+    }
+
+    printf("\nTest 6: Create account with empty username\n");
     account = account_create("", "password123", "test@example.com", "2000-01-01");
     if (account) {
         printf("FAIL: Account creation succeeded unexpectedly for empty username\n");
@@ -94,7 +104,7 @@ int main() {
         printf("PASS: Account creation failed as expected for empty username\n");
     }
 
-    printf("\nTest 6: Create account with empty password\n");
+    printf("\nTest 7: Create account with empty password\n");
     account = account_create("testuser", "", "test@example.com", "2000-01-01");
     if (account) {
         printf("FAIL: Account creation succeeded unexpectedly for empty password\n");
@@ -103,7 +113,7 @@ int main() {
         printf("PASS: Account creation failed as expected for empty password\n");
     }
 
-    printf("\nTest 7: Create account with empty email\n");
+    printf("\nTest 8: Create account with empty email\n");
     account = account_create("testuser", "password123", "", "2000-01-01");
     if (account) {
         printf("FAIL: Account creation succeeded unexpectedly for empty email\n");
@@ -112,7 +122,7 @@ int main() {
         printf("PASS: Account creation failed as expected for empty email\n");
     }
 
-    printf("\nTest 8: Create account with empty birthdate\n");
+    printf("\nTest 9: Create account with empty birthdate\n");
     account = account_create("testuser", "password123", "test@example.com", "");
     if (account) {
         printf("FAIL: Account creation succeeded unexpectedly for empty birthdate\n");

@@ -19,70 +19,71 @@
 // ./test_passwords
 
 int main() {
-    account_t *account = account_create("testuser", "password123", "test@example.com", "1990-01-01");
+    account_t *account = account_create("user", "password", "user@example.com", "2000-01-01");
      
     printf("\nTest 1: Validate password with NULL account\n");
-    if (account_validate_password(NULL, "password123")) {
-        printf("FAIL: Password validation succeeded unexpectedly with NULL account!\n");
+    if (account_validate_password(NULL, "password")) {
+        printf("[FAIL] Password validation succeeded\n");
     } else {
-        printf("PASS: Password validation failed as expected with NULL account!\n");
+        printf("[PASS] Password validation failed\n");
     }
 
-    
-    printf("\nTest 2: Update password with NULL account\n");
-    if (account_update_password(NULL, "newpassword123")) {
-        printf("FAIL: Password update succeeded unexpectedly with NULL account!\n");
-    } else {
-        printf("PASS: Password update failed as expected with NULL account!\n");
-    }
-
-    printf("\nTest 3: Validate password with NULL\n");
+    printf("\nTest 2: Validate password with NULL password\n");
     if (account_validate_password(account, NULL)) {
-        printf("FAIL: Password validation succeeded unexpectedly!\n");
+        printf("[FAIL] Password validation succeeded\n");
     } else {
-        printf("PASS: Password validation failed as expected!\n");
+        printf("[PASS] Password validation failed\n");
+    }
+    
+    printf("\nTest 3: Update password with NULL account\n");
+    if (account_update_password(NULL, "newpassword")) {
+        printf("[FAIL] Password update succeeded\n");
+    } else {
+        printf("[PASS] Password update failed\n");
     }
 
-      printf("\nTest 4: Update password with NULL\n");
+      printf("\nTest 4: Update password with NULL password\n");
     if (account_update_password(account, NULL)) {
-        printf("FAIL: Password update succeeded unexpectedly!\n");
+        printf("[FAIL] Password update succeeded\n");
     } else {
-        printf("PASS: Password update failed as expected!\n");
+        printf("[PASS] Password update failed\n");
     }
 
     printf("\nTest 5: Validate correct password\n");
-    if (account_validate_password(account, "password123")) {
-        printf("PASS: Password validation succeeded as expected!\n");
+    if (account_validate_password(account, "password")) {
+        printf("[PASS] Password validation succeeded\n");
     } else {
-        printf("FAIL: Password validation failed unexpectedly!\n");
+        printf("[FAIL] Password validation failed\n");
     }
 
     printf("\nTest 6: Validate incorrect password\n");
     if (account_validate_password(account, "wrongpassword")) {
-        printf("FAIL: Password validation succeeded unexpectedly!\n");
+        printf("[FAIL] Password validation succeeded\n");
     } else {
-        printf("PASS: Password validation failed as expected!\n");
+        printf("[PASS] Password validation failed\n");
     }
 
+    // Update and validate new password
     printf("\nTest 7: Update password to a new valid password\n");
-    if (account_update_password(account, "newpassword123")) {
-        printf("PASS: Password update succeeded as expected!\n");
+    if (account_update_password(account, "newpassword")) {
+        printf("[PASS] Password update succeeded\n");
     } else {
-        printf("FAIL: Password update failed unexpectedly!\n");
+        printf("[FAIL] Password update failed\n");
     }
 
     printf("\nTest 8: Validate new password\n");
-    if (account_validate_password(account, "newpassword123")) {
-        printf("PASS: Password validation succeeded as expected with new password!\n");
+    if (account_validate_password(account, "newpassword")) {
+        printf("[PASS] Password validation succeeded\n");
     } else {
-        printf("FAIL: Password validation failed unexpectedly with new password!\n");
+        printf("[FAIL] Password validation failed\n");
     }
 
+    // Test old password doesn't work anymore
     printf("\nTest 9: Validate old password after update\n");
-    if (account_validate_password(account, "password123")) {
-        printf("FAIL: Password validation succeeded unexpectedly with old password!\n");
+    if (account_validate_password(account, "password")) {
+        printf("[FAIL] Password validation succeeded\n");
     } else {
-        printf("PASS: Password validation failed as expected with old password!\n");
+        printf("[PASS] Password validation failed\n");
     }
 
     account_free(account);

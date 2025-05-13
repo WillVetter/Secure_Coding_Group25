@@ -23,93 +23,93 @@ int main() {
     account_t *account;
 
     printf("Test 1: Create account with NULL username\n");
-    account = account_create(NULL, "password123", "test@example.com", "2000-01-01");
+    account = account_create(NULL, "password", "user@example.com", "2000-01-01");
     if (account) {
-        printf("FAIL: Account creation succeeded unexpectedly for NULL username\n");
+        printf("[FAIL] Account creation succeeded\n");
         account_free(account);
     } else {
-        printf("PASS: Account creation failed as expected for NULL username\n");
+        printf("[PASS] Account creation failed\n");
     }
 
     printf("\nTest 2: Create account with NULL password\n");
-    account = account_create("testuser", NULL, "test@example.com", "2000-01-01");
+    account = account_create("user", NULL, "user@example.com", "2000-01-01");
     if (account) {
-        printf("FAIL: Account creation succeeded unexpectedly for NULL password\n");
+        printf("[FAIL] Account creation succeeded\n");
         account_free(account);
     } else {
-        printf("PASS: Account creation failed as expected for NULL password\n");
+        printf("[PASS] Account creation failed\n");
     }
 
     printf("\nTest 3: Create account with NULL email\n");
-    account = account_create("testuser", "password123", NULL, "2000-01-01");
+    account = account_create("user", "password", NULL, "2000-01-01");
     if (account) {
-        printf("FAIL: Account creation succeeded unexpectedly for NULL email\n");
+        printf("[FAIL] Account creation succeeded\n");
         account_free(account);
     } else {
-        printf("PASS: Account creation failed as expected for NULL email\n");
+        printf("[PASS] Account creation failed\n");
     }
 
     printf("\nTest 4: Create account with NULL birthdate\n");
-    account = account_create("testuser", "password123", "test@example.com", NULL);
+    account = account_create("user", "password", "user@example.com", NULL);
     if (account) {
-        printf("FAIL: Account creation succeeded unexpectedly for NULL birthdate\n");
+        printf("[FAIL] Account creation succeeded\n");
         account_free(account);
     } else {
-        printf("PASS: Account creation failed as expected for NULL birthdate\n");
+        printf("[PASS] Account creation failed\n");
     }
 
     printf("Test 5: Create account with wrong format of birthdate\n");
-    account = account_create("testuser", "password123", "test@example.com", "01-01-2000");
+    account = account_create("user", "password", "user@example.com", "01-01-2000");
     if (account) {
-        printf("FAIL: Account creation succeeded unexpectedly\n");
+        printf("[FAIL] Account creation succeeded");
     } else {
-        printf("PASS: Account creation failed as expected\n");
+        printf("[PASS] Account creation failed");
         account_free(account);
     }
 
     printf("\nTest 6: Create account with empty username\n");
-    account = account_create("", "password123", "test@example.com", "2000-01-01");
+    account = account_create("", "password", "user@example.com", "2000-01-01");
     if (account) {
-        printf("FAIL: Account creation succeeded unexpectedly for empty username\n");
+        printf("[FAIL] Account creation succeeded\n");
         account_free(account);
     } else {
-        printf("PASS: Account creation failed as expected for empty username\n");
+        printf("[PASS] Account creation failed\n");
     }
 
     printf("\nTest 7: Create account with empty password\n");
-    account = account_create("testuser", "", "test@example.com", "2000-01-01");
+    account = account_create("user", "", "user@example.com", "2000-01-01");
     if (account) {
-        printf("FAIL: Account creation succeeded unexpectedly for empty password\n");
+        printf("[FAIL] Account creation succeeded\n");
         account_free(account);
     } else {
-        printf("PASS: Account creation failed as expected for empty password\n");
+        printf("[PASS] Account creation failed\n");
     }
 
     printf("\nTest 8: Create account with empty email\n");
-    account = account_create("testuser", "password123", "", "2000-01-01");
+    account = account_create("user", "password", "", "2000-01-01");
     if (account) {
-        printf("FAIL: Account creation succeeded unexpectedly for empty email\n");
+        printf("[FAIL] Account creation succeeded\n");
         account_free(account);
     } else {
-        printf("PASS: Account creation failed as expected for empty email\n");
+        printf("[PASS] Account creation failed\n");
     }
 
     printf("\nTest 9: Create account with empty birthdate\n");
-    account = account_create("testuser", "password123", "test@example.com", "");
+    account = account_create("user", "password", "user@example.com", "");
     if (account) {
-        printf("FAIL: Account creation succeeded unexpectedly for empty birthdate\n");
+        printf("[FAIL] Account creation succeeded\n");
         account_free(account);
     } else {
-        printf("PASS: Account creation failed as expected for empty birthdate\n");
+        printf("[PASS] Account creation failed\n");
     }
 
     printf("\nTest 9: Create valid account\n");
-    account = account_create("testuser", "password123", "test@example.com", "2000-01-01");
+    account = account_create("user", "password", "user@example.com", "2000-01-01");
     if (account) {
-        printf("PASS: Account creation succeeded\n");
+        printf("[PASS] Account creation succeeded\n");
         account_free(account);
     } else {
-        printf("PASS: Account creation failed\n");
+        printf("[PASS] Account creation failed\n");
     }
 
     return 0;

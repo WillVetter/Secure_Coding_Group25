@@ -8,13 +8,14 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "logging.h"
+#include "db.h"
 
 // Tests all arguments in account_validate_password, account_update_password are:
 // 1) acc and new_plaintext_password must be non-NULL.
 // 2) new_plaintext_password must be a valid, null-terminated string.
 
 // RUN in the terminal:
-// gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_passwords tests/test_passwords.c src/account.c -Isrc -lsodium
+// gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_passwords tests/test_passwords.c src/account.c src/stubs.c -Isrc -lsodium
 // ./test_passwords
 
 int main() {

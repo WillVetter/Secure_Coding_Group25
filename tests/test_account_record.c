@@ -12,11 +12,10 @@
 // (1) acc must be non-NULL
 
 // RUN in the terminal:
-// gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_account_record tests/test_account_record.c src/account.c -Isrc -lsodium
+// gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_account_record tests/test_account_record.c src/account.c src/stubs.c -Isrc -lsodium
 // ./test_account_record
 
 int main() {
-    printf("Testing login_fail_count functionality...\n");
 
     account_t *account = account_create("testuser", "password123", "test@example.com", "2000-01-01");
     if (!account) {

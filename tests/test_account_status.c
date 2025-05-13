@@ -4,6 +4,7 @@
 #include "account.h"
 #include <sodium.h>
 #include "logging.h"
+#include "db.h"
 
 #include <stdarg.h>
 
@@ -11,7 +12,7 @@
 // (1) acc must be non-NULL
 
 // RUN in the terminal:
-// gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_account_status tests/test_account_status.c src/account.c -Isrc -lsodium
+// gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_account_status tests/test_account_status.c src/account.c src/stubs.c -Isrc -lsodium
 // ./test_account_status
 
 int main() {

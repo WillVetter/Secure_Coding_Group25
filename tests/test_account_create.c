@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include "logging.h"
+#include "db.h"
 
 // Tests all arguments in account_create() are:
 // (1) All arguments must be valid, null-terminated strings. 
@@ -15,7 +16,7 @@
 // (3) Birthdate is in format YYYY-MM-DD
 
 // RUN in the terminal:
-// gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_account_create tests/test_account_create.c src/account.c -Isrc -lsodium
+// gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_account_create tests/test_account_create.c src/account.c src/stubs.c -Isrc -lsodium
 // ./test_account_create
 
 int main() {

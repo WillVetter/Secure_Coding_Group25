@@ -13,7 +13,7 @@
 // 3) client_output_fd and log_fd must be valid file descriptors, open for writing.
 
 // RUN in the terminal:
-// gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_handle_login tests/test_handle_login.c src/account.c src/login.c -Isrc -lsodium
+// gcc -std=c11 -pedantic-errors -Wall -Wextra -o test_handle_login tests/test_handle_login.c src/account.c src/stubs.c src/login.c -Isrc -lsodium
 // ./test_handle_login
 
 

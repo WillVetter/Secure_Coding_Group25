@@ -8,11 +8,13 @@
 #include "logging.h"
 #include "db.h"
 
-#define SESSION_DURATION_LIMIT (3600 * 5)
+// TEMPORARY: 10 minutes session duration. Update when official policy is defined.
+#define SESSION_DURATION_LIMIT (4 * 3600)
 #define TIMESTAMP_BUFFER 26
 #define STRINGIFY_IP_BUFFER 16
 #define MAX_LOGIN_RETRIES 10
-#define AUTO_BAN_DURATION (3600 * 24)
+// TEMPORARY: 10 minutes auto-ban duration. Update when official policy is defined.
+#define AUTO_BAN_DURATION (10 * 60)
 
 static void get_readable_time(time_t t, char *buffer, size_t size) {
     struct tm *tm_info = localtime(&t);

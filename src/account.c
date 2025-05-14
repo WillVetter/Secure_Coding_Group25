@@ -156,12 +156,15 @@ account_t *account_create(const char *userid, const char *plaintext_password,
  * @param acc The account to free.
  */
 void account_free(account_t *acc) {
-    if (!acc) return;
 
-    if (acc->last_ip) {};
+    if (acc == NULL) {
+        return;
+    }
 
     free(acc);
+    log_message(LOG_DEBUG, "Account freed from memory.\n");
 }
+
 
 
 /**

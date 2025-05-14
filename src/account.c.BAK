@@ -13,6 +13,7 @@
 #include <sodium.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include "banned.h"
 
 
 /**
@@ -37,6 +38,20 @@ char* hashPassword(const char* plaintext_password) {
         return NULL;
     }
 
+    if (!plaintext_password) {
+        log_message(LOG_ERROR, "hash_password: NULL password provided");
+        return NULL;
+    }
+
+    if (sodium_init() < 0) {
+        log_message(LOG_ERROR, "Failed to hash password: libsodium initialization failed");
+        return NULL;
+    }
+    char* hashed_password = malloc(crypto_pwhash_STRBYTES);
+    if (!hashed_password) {
+        log_message(LOG_ERROR, "Failed to hash password: memory allocation failed");
+        return NULL;
+    }
   
     if (crypto_pwhash_str(
         hashed_password,
@@ -49,6 +64,7 @@ char* hashPassword(const char* plaintext_password) {
         free(hashed_password);
     return NULL;
     }
+    
 return hashed_password;
 
 }

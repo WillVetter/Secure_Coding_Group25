@@ -11,6 +11,8 @@
 
 //Remove below if not needed (only used for logging)
 #include <arpa/inet.h>
+#include "banned.h"
+
 
 /**
  * Create a new account with the specified parameters.
@@ -57,7 +59,6 @@ char* hashPassword(const char* plaintext_password) {
     free(hashed_password);
     return NULL;
   }
-
   return hashed_password;
 }
 
@@ -66,6 +67,11 @@ account_t *account_create(const char *userid, const char *plaintext_password,
 {
     if (!userid || !plaintext_password || !email || !birthdate) {
         log_message(LOG_ERROR, "account_create: NULL argument");
+        return NULL;
+    }
+
+    if (strlen(plaintext_password) == 0) {
+        log_message(LOG_ERROR, "account_create: password cannot be empty");
         return NULL;
     }
 
@@ -152,6 +158,7 @@ bool account_validate_password(const account_t *acc, const char *plaintext_passw
     log_message(LOG_ERROR, "account_validate_password: NULL argument provided");
     return false;
   }
+
   if (crypto_pwhash_str_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) != 0) {
     log_message(LOG_ERROR, "account_validate_password: password verification failed for user %s", acc->userid);
     return false;
@@ -190,7 +197,16 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
 }
 
 void account_record_login_success(account_t *acc, ip4_addr_t ip) {
-    if (!acc) return;
+    if (!acc) {
+        log_message(LOG_ERROR, "account_record_login_success: NULL argument");
+        return;
+    }
+
+    // Check if login_fail_count >= 10 and if so, ban the account
+    if (acc->login_fail_count >= 10) {
+        log_message(LOG_WARN, "account_record_login_success: Login attempt blocked due to too many failed attempts for user %s", acc->userid);
+        return; 
+    }
 
     acc->login_fail_count = 0;
     acc->last_ip = ip;
@@ -205,11 +221,11 @@ void account_record_login_success(account_t *acc, ip4_addr_t ip) {
 
 
 void account_record_login_failure(account_t *acc) {
-  // remove the contents of this function and replace it with your own code.
   if (!acc) {
       log_message(LOG_ERROR, "account_record_login_failure: NULL argument");
       return;
   }
+  acc->login_fail_count++;
   acc->login_count = 0; 
 }
 
@@ -217,19 +233,26 @@ bool account_is_banned(const account_t *acc) {
 
   if (!acc) {
       log_message(LOG_ERROR, "account_is_banned: NULL argument");
-      return NULL;
+      return false;
   }
 
-  if (acc->unban_time == 0) {
+  time_t now = time(NULL);
+  if (acc->unban_time > now) {
     log_message(LOG_INFO, "account is banned: %ld \n", acc->unban_time);
-    return false; 
+    return true; 
   } 
   else {
-    return true; 
+    log_message(LOG_INFO, "account_is_banned: Account is not banned (unban_time: %ld, current time: %ld)", acc->unban_time, now);
+    return false; 
   }
 }
 
 bool account_is_expired(const account_t *acc) {
+   if (!acc) {
+        log_message(LOG_ERROR, "account_is_expired: NULL argument");
+        return false;
+    }
+  
   time_t current_time = time(NULL);
   if (acc->expiration_time != 0 && current_time >= acc->expiration_time) {
       log_message(LOG_INFO, "account_is_expired: Account %s is expired", acc->userid);

@@ -87,6 +87,14 @@ int main() {
         log_message(LOG_INFO, "[PASS] Password validation failed\n");
     }
 
+    // Test long password
+    log_message(LOG_INFO, "Test 10: Validate long password after update\n");
+    if (account_validate_password(account, "passwordpasswordpasswordpasswordpasswordpasswordpasswordpasswordpasswordpasswordpasswordpasswordpassword")) {
+        log_message(LOG_ERROR, "[FAIL] Password validation succeeded\n");
+    } else {
+        log_message(LOG_INFO, "[PASS] Password validation failed\n");
+    }
+
     account_free(account);
 
     return 0;

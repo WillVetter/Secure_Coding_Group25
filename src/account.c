@@ -11,7 +11,6 @@
 
 //Remove below if not needed (only used for logging)
 #include <arpa/inet.h>
-#include "banned.h"
 
 
 /**
@@ -213,7 +212,7 @@ void account_record_login_success(account_t *acc, ip4_addr_t ip) {
     acc->last_login_time = time(NULL);
 
     //This is all part of the same log functionality
-    char ip_str[INET_ADDRSTRLEN]; // Buffer to hold the IP string
+    char ip_str[INET_ADDRSTRLEN] = {0}; // Buffer to hold the IP string
     inet_ntop(AF_INET, &ip, ip_str, INET_ADDRSTRLEN);
     log_message(LOG_INFO, "Successful login for user %s from %s",
                 acc->userid, ip_str);

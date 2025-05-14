@@ -13,7 +13,6 @@
 #include <sodium.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "banned.h"
 
 /**
  * @brief Validate a user input string by checking if all characters are part of an establisehd whitelist.
@@ -26,15 +25,15 @@ bool validate_input(const char *input) {
   }
 
   size_t input_len = strlen(input);
-  const char* allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@.-+"
+  const char* allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@.-+";
 
   for (size_t i = 0; i < input_len; i++) {
     char c = input[i];
     if (!strchr(allowed, c)) {
       log_message(LOG_ERROR, "invalid character in %s at position %i\n", input, i);
-      return false
+      return false;
     } 
-
+  }
   return true;
 }
 
@@ -364,7 +363,7 @@ void account_set_email(account_t *acc, const char *new_email) {
 
     if (!validate_input(new_email)) {
       log_message(LOG_ERROR, "account_set_email: invalid input. Only alphanumeric characters, _, @, ., -, + are allowed");
-      return NULL;
+      return;
     }
 
     size_t em_len = strlen(new_email);

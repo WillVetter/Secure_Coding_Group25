@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include "banned.h"
+#define STRINGIFY_IP_BUFFER 16
 
 
 /**
@@ -67,6 +68,17 @@ char* hashPassword(const char* plaintext_password) {
     
 return hashed_password;
 
+}
+
+/**
+ * @brief Convert an IPv4 address to a string.
+ * @param ip The 32-bit IPv4 address.
+ * @param buffer The buffer to store the string representation.
+ * @param size The size of the buffer.
+ */
+static void ip4_to_string(ip4_addr_t ip, char *buffer, size_t size) {
+    struct in_addr addr = { .s_addr = ip };
+    inet_ntop(AF_INET, &addr, buffer, size);
 }
 
 /**
@@ -237,8 +249,8 @@ void account_record_login_success(account_t *acc, ip4_addr_t ip) {
     acc->last_ip = ip;
     acc->last_login_time = time(NULL);
 
-    char ip_str[INET_ADDRSTRLEN];
-    inet_ntop(AF_INET, &ip, ip_str, INET_ADDRSTRLEN);
+    char ip_str[STRINGIFY_IP_BUFFER];
+    ip4_to_string(ip, ip_str, sizeof(ip_str));
     log_message(LOG_INFO, "Successful login for user %s from %s",
                 acc->userid, ip_str);
 }
@@ -369,10 +381,10 @@ bool account_print_summary(const account_t *acct, int fd) {
     }
 
     char summary[512];
-    char ip_str[INET_ADDRSTRLEN] = "N/A";
+    char ip_str[STRINGIFY_IP_BUFFER];
 
     if (acct->last_ip != 0) {
-        inet_ntop(AF_INET, &acct->last_ip, ip_str, INET_ADDRSTRLEN);
+        ip4_to_string(acct->last_ip, ip_str, sizeof(ip_str));
     }
 
     int written = snprintf(summary, sizeof(summary),

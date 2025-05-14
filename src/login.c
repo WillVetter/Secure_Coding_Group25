@@ -14,11 +14,13 @@
 #include "db.h"
 #include "banned.h"
 
-#define SESSION_DURATION_LIMIT (3600 * 5)
+// 2 hour session duration. Would change depending on policy.
+#define SESSION_DURATION_LIMIT (2 * 3600)
+// MIN 10 minutes auto-ban duration. Would change depending on policy.
+#define AUTO_BAN_DURATION (10 * 60)
+#define MAX_LOGIN_RETRIES 10
 #define TIMESTAMP_BUFFER 26
 #define STRINGIFY_IP_BUFFER 16
-#define MAX_LOGIN_RETRIES 10
-#define AUTO_BAN_DURATION (3600 * 24)
 
 /**
  * @brief Convert a `time_t` value into a human-readable string.
@@ -32,7 +34,7 @@ static void get_readable_time(time_t t, char *buffer, size_t size) {
         strftime(buffer, size, "%Y-%m-%d %H:%M:%S", tm_info);
     } else {
         strncpy(buffer, "Unknown time", size);
-        buffer[size - 1] = '\0';
+        buffer[size - 1] = '\0'; // Prevents buffer overflow
     }
 }
 
@@ -65,10 +67,25 @@ login_result_t handle_login(const char *userid, const char *password,
     char unban_str[TIMESTAMP_BUFFER];
     char ip_str[STRINGIFY_IP_BUFFER];
 
-    time_t now = time(NULL);
+    time_t now = login_time;
     get_readable_time(now, now_str, sizeof(now_str));
     ip4_to_string(client_ip, ip_str, sizeof(ip_str));
 
+    // Username is NULL
+    if (!userid) {
+        dprintf(client_output_fd, "Login failed: Username is required\n");
+        log_message(LOG_ERROR, "handle_login: Username is NULL");
+        return LOGIN_FAIL_USER_NOT_FOUND;
+    }
+
+    // Password is NULL
+    if (!password) {
+        dprintf(client_output_fd, "Login failed: Password is required\n");
+        log_message(LOG_ERROR, "handle_login: Password is NULL");
+        return LOGIN_FAIL_BAD_PASSWORD;
+    }
+
+    // User cannot be found
     account_t user_account_buf;
     if (!account_lookup_by_userid(userid, &user_account_buf)) {
         dprintf(client_output_fd, "Login failed: User not found\n");
@@ -77,19 +94,24 @@ login_result_t handle_login(const char *userid, const char *password,
     }
     account_t *user_account = &user_account_buf;
 
-    if (account_is_banned(user_account)) {
-        dprintf(client_output_fd, "Login failed: Account is banned\n");
+    // Account is banned
+    if (user_account->unban_time > now) {
+        get_readable_time(user_account->unban_time, unban_str, sizeof(unban_str));
+        dprintf(client_output_fd, 
+                "Account Banned: Too many failed login attempts. Try again after %s\n", unban_str);
         log_message(LOG_WARN, "Login attempt by banned user %s from IP %s at %s\n", userid, ip_str, now_str);
         return LOGIN_FAIL_ACCOUNT_BANNED;
     }
 
+    // Account is expired
     if (account_is_expired(user_account)) {
         dprintf(client_output_fd, "Login failed: Account is expired\n");
         log_message(LOG_WARN, "Login attempt by expired user %s from IP %s at %s\n", userid, ip_str, now_str);
         return LOGIN_FAIL_ACCOUNT_EXPIRED;
     }
 
-    if (user_account->login_fail_count > MAX_LOGIN_RETRIES) {
+    // Account fails to login 10 consecutive times
+    if (user_account->login_fail_count >= MAX_LOGIN_RETRIES) {
         time_t unban_at = now + AUTO_BAN_DURATION;
         get_readable_time(unban_at, unban_str, sizeof(unban_str));
 
@@ -103,6 +125,7 @@ login_result_t handle_login(const char *userid, const char *password,
         return LOGIN_FAIL_ACCOUNT_BANNED;
     }
 
+    // Validates the password when logging in
     if (!account_validate_password(user_account, password)) {
         account_record_login_failure(user_account);
 
@@ -116,10 +139,14 @@ login_result_t handle_login(const char *userid, const char *password,
         return LOGIN_FAIL_BAD_PASSWORD;
     }
 
+    // User successfully logins
     account_record_login_success(user_account, client_ip);
-    session->account_id = user_account->account_id;
-    session->session_start = user_account->last_login_time;
-    session->expiration_time = user_account->last_login_time + SESSION_DURATION_LIMIT;
+
+    if (session) {
+        session->account_id = user_account->account_id;
+        session->session_start = user_account->last_login_time;
+        session->expiration_time = user_account->last_login_time + SESSION_DURATION_LIMIT;
+    }
 
     dprintf(client_output_fd, "Login successful: Welcome %s\n", userid);
     log_message(LOG_INFO, "User %s logged in from IP %s at %s\n", userid, ip_str, now_str);

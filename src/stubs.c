@@ -16,6 +16,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+#include "banned.h"
 
 
 /**
@@ -46,7 +47,7 @@ void log_message(log_level_t level, const char *fmt, ...) {
       fprintf(stderr, "DEBUG: ");
       break;
     case LOG_INFO:
-      fprintf(stdout, "INFO: ");
+      fprintf(stderr, "INFO: ");
       break;
     case LOG_WARN:
       fprintf(stderr, "WARNING: ");
@@ -64,6 +65,7 @@ void log_message(log_level_t level, const char *fmt, ...) {
 
   pthread_mutex_unlock(&log_mutex);
 }
+
 
 
 bool account_lookup_by_userid(const char *userid, account_t *acc) {
@@ -88,9 +90,13 @@ bool account_lookup_by_userid(const char *userid, account_t *acc) {
     strcpy(bob_acc.userid, "bob");
     strcpy(bob_acc.email, "bob.smith@example.com");
     memcpy(bob_acc.birthdate, "1990-01-01", BIRTHDATE_LENGTH);
+
+    // This is the hashed version of "newpass123"
+    strcpy(bob_acc.password_hash,
+      "$argon2id$v=19$m=65536,t=2,p=1$8kuYot+vmNgrcCv+lAolhw$5RGvHhmiLLnDQA4Z1FyH6plT07KYvgx4xWLd2AuWTqY");
+
     *acc = bob_acc;
     return true;
   }
   return false;
 }
-

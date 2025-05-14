@@ -13,6 +13,8 @@
 #include <sodium.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include "banned.h"
+
 
 /**
  * @brief Hash a plaintext password using Argon2id.
@@ -36,18 +38,33 @@ char* hashPassword(const char* plaintext_password) {
         return NULL;
     }
 
-    if (crypto_pwhash_str(
-        hashed_password,
-        plaintext_password,
-        strlen(plaintext_password),
-        crypto_pwhash_OPSLIMIT_MODERATE,
-        crypto_pwhash_MEMLIMIT_MODERATE) != 0) {
-        log_message(LOG_ERROR, "hash_password: password hashing failed");
-        free(hashed_password);
-        return NULL;
-    }
+  if (!plaintext_password) {
+    log_message(LOG_ERROR, "hash_password: NULL password provided");
+    return NULL;
+  }
 
-    return hashed_password;
+  if (sodium_init() < 0) {
+    log_message(LOG_ERROR, "Failed to hash password: libsodium initialization failed");
+    return NULL;
+  }
+  char* hashed_password = malloc(crypto_pwhash_STRBYTES);
+  if (!hashed_password) {
+    log_message(LOG_ERROR, "Failed to hash password: memory allocation failed");
+    return NULL;
+  }
+  
+  if (crypto_pwhash_str(
+      hashed_password,
+      plaintext_password,
+      strlen(plaintext_password),
+      // Potentially different limits? 
+      crypto_pwhash_OPSLIMIT_MODERATE,
+      crypto_pwhash_MEMLIMIT_MODERATE) != 0) {
+      log_message(LOG_ERROR, "hash_password: password hashing failed");
+    free(hashed_password);
+    return NULL;
+  }
+  return hashed_password;
 }
 
 /**
@@ -63,6 +80,11 @@ account_t *account_create(const char *userid, const char *plaintext_password,
 {
     if (!userid || !plaintext_password || !email || !birthdate) {
         log_message(LOG_ERROR, "account_create: NULL argument");
+        return NULL;
+    }
+
+    if (strlen(plaintext_password) == 0) {
+        log_message(LOG_ERROR, "account_create: password cannot be empty");
         return NULL;
     }
 
@@ -147,14 +169,15 @@ void account_free(account_t *acc) {
 * @return true if the password matches, false otherwise.
 */
 bool account_validate_password(const account_t *acc, const char *plaintext_password) {
-    if (!acc || !plaintext_password) {
-        log_message(LOG_ERROR, "account_validate_password: NULL argument provided");
-        return false;
-    }
-    if (crypto_pwhash_str_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) != 0) {
-        log_message(LOG_ERROR, "account_validate_password: password verification failed for user %s", acc->userid);
-        return false;
-    }
+  if (!acc || !plaintext_password) {
+    log_message(LOG_ERROR, "account_validate_password: NULL argument provided");
+    return false;
+  }
+
+  if (crypto_pwhash_str_verify(acc->password_hash, plaintext_password, strlen(plaintext_password)) != 0) {
+    log_message(LOG_ERROR, "account_validate_password: password verification failed for user %s", acc->userid);
+    return false;
+  }
 
     log_message(LOG_INFO, "account_validate_password: password verification succeeded for user %s", acc->userid);
     return true;
@@ -194,7 +217,16 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
  * @param ip The IP address of the successful login.
  */
 void account_record_login_success(account_t *acc, ip4_addr_t ip) {
-    if (!acc) return;
+    if (!acc) {
+        log_message(LOG_ERROR, "account_record_login_success: NULL argument");
+        return;
+    }
+
+    // Check if login_fail_count >= 10 and if so, ban the account
+    if (acc->login_fail_count >= 10) {
+        log_message(LOG_WARN, "account_record_login_success: Login attempt blocked due to too many failed attempts for user %s", acc->userid);
+        return; 
+    }
 
     acc->login_fail_count = 0;
     acc->last_ip = ip;
@@ -211,11 +243,12 @@ void account_record_login_success(account_t *acc, ip4_addr_t ip) {
  * @param acc The account to update.
  */
 void account_record_login_failure(account_t *acc) {
-    if (!acc) {
-        log_message(LOG_ERROR, "account_record_login_failure: NULL argument");
-        return;
-    }
-    acc->login_count = 0; 
+  if (!acc) {
+      log_message(LOG_ERROR, "account_record_login_failure: NULL argument");
+      return;
+  }
+  acc->login_fail_count++;
+  acc->login_count = 0; 
 }
 
 /**
@@ -225,18 +258,20 @@ void account_record_login_failure(account_t *acc) {
  */
 bool account_is_banned(const account_t *acc) { 
 
-    if (!acc) {
-        log_message(LOG_ERROR, "account_is_banned: NULL argument");
-        return NULL;
-    }
+  if (!acc) {
+      log_message(LOG_ERROR, "account_is_banned: NULL argument");
+      return false;
+  }
 
-    if (acc->unban_time == 0) {
-        log_message(LOG_INFO, "account is banned: %ld \n", acc->unban_time);
-        return false; 
-    } 
-    else {
-        return true; 
-    }
+  time_t now = time(NULL);
+  if (acc->unban_time > now) {
+    log_message(LOG_INFO, "account is banned: %ld \n", acc->unban_time);
+    return true; 
+  } 
+  else {
+    log_message(LOG_INFO, "account_is_banned: Account is not banned (unban_time: %ld, current time: %ld)", acc->unban_time, now);
+    return false; 
+  }
 }
 
 /**
@@ -245,11 +280,16 @@ bool account_is_banned(const account_t *acc) {
  * @return true if the account is expired, false otherwise.
  */
 bool account_is_expired(const account_t *acc) {
-    time_t current_time = time(NULL);
-    if (acc->expiration_time != 0 && current_time >= acc->expiration_time) {
-        log_message(LOG_INFO, "account_is_expired: Account %s is expired", acc->userid);
-        return true;
+   if (!acc) {
+        log_message(LOG_ERROR, "account_is_expired: NULL argument");
+        return false;
     }
+  
+  time_t current_time = time(NULL);
+  if (acc->expiration_time != 0 && current_time >= acc->expiration_time) {
+      log_message(LOG_INFO, "account_is_expired: Account %s is expired", acc->userid);
+      return true;
+  }
 
     return false;
 }

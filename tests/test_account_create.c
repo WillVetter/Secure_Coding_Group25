@@ -23,7 +23,7 @@
 int main() {
     account_t *account;
 
-    log_message(LOG_INFO, "\nTest 1: Create account with NULL username\n");
+    log_message(LOG_INFO, "Test 1: Create account with NULL username\n");
     account = account_create(NULL, "password", "user@example.com", "2000-01-01");
     if (account) {
         log_message(LOG_ERROR, "[FAIL] Account creation succeeded\n");
@@ -32,7 +32,7 @@ int main() {
         log_message(LOG_INFO, "[PASS] Account creation failed\n");
     }
 
-    log_message(LOG_INFO, "\nTest 2: Create account with NULL password\n");
+    log_message(LOG_INFO, "Test 2: Create account with NULL password\n");
     account = account_create("user", NULL, "user@example.com", "2000-01-01");
     if (account) {
         log_message(LOG_ERROR, "[FAIL] Account creation succeeded\n");
@@ -41,7 +41,7 @@ int main() {
         log_message(LOG_INFO, "[PASS] Account creation failed\n");
     }
 
-    log_message(LOG_INFO, "\nTest 3: Create account with NULL email\n");
+    log_message(LOG_INFO, "Test 3: Create account with NULL email\n");
     account = account_create("user", "password", NULL, "2000-01-01");
     if (account) {
         log_message(LOG_ERROR, "[FAIL] Account creation succeeded\n");
@@ -50,7 +50,7 @@ int main() {
         log_message(LOG_INFO, "[PASS] Account creation failed\n");
     }
 
-    log_message(LOG_INFO, "\nTest 4: Create account with NULL birthdate\n");
+    log_message(LOG_INFO, "Test 4: Create account with NULL birthdate\n");
     account = account_create("user", "password", "user@example.com", NULL);
     if (account) {
         log_message(LOG_ERROR, "[FAIL] Account creation succeeded\n");
@@ -59,7 +59,7 @@ int main() {
         log_message(LOG_INFO, "[PASS] Account creation failed\n");
     }
 
-    log_message(LOG_INFO, "\nTest 5: Create account with wrong format of birthdate\n");
+    log_message(LOG_INFO, "Test 5: Create account with wrong format of birthdate\n");
     account = account_create("user", "password", "user@example.com", "01-01-2000");
     if (account) {
         log_message(LOG_ERROR, "[FAIL] Account creation succeeded");
@@ -68,7 +68,7 @@ int main() {
         account_free(account);
     }
 
-    log_message(LOG_INFO, "\nTest 6: Create account with empty username\n");
+    log_message(LOG_INFO, "Test 6: Create account with empty username\n");
     account = account_create("", "password", "user@example.com", "2000-01-01");
     if (account) {
         log_message(LOG_ERROR, "[FAIL] Account creation succeeded\n");
@@ -77,7 +77,7 @@ int main() {
         log_message(LOG_INFO, "[PASS] Account creation failed\n");
     }
 
-    log_message(LOG_INFO, "\nTest 7: Create account with empty password\n");
+    log_message(LOG_INFO, "Test 7: Create account with empty password\n");
     account = account_create("user", "", "user@example.com", "2000-01-01");
     if (account) {
         log_message(LOG_ERROR, "[FAIL] Account creation succeeded\n");
@@ -86,7 +86,7 @@ int main() {
         log_message(LOG_INFO, "[PASS] Account creation failed\n");
     }
 
-    log_message(LOG_INFO, "\nTest 8: Create account with empty email\n");
+    log_message(LOG_INFO, "Test 8: Create account with empty email\n");
     account = account_create("user", "password", "", "2000-01-01");
     if (account) {
         log_message(LOG_ERROR, "[FAIL] Account creation succeeded\n");
@@ -95,7 +95,7 @@ int main() {
         log_message(LOG_INFO, "[PASS] Account creation failed\n");
     }
 
-    log_message(LOG_INFO, "\nTest 9: Create account with empty birthdate\n");
+    log_message(LOG_INFO, "Test 9: Create account with empty birthdate\n");
     account = account_create("user", "password", "user@example.com", "");
     if (account) {
         log_message(LOG_ERROR, "[FAIL] Account creation succeeded\n");
@@ -104,7 +104,7 @@ int main() {
         log_message(LOG_INFO, "[PASS] Account creation failed\n");
     }
 
-    log_message(LOG_INFO, "\nTest 9: Create valid account\n");
+    log_message(LOG_INFO, "Test 9: Create valid account\n");
     account = account_create("user", "password", "user@example.com", "2000-01-01");
     if (account) {
         log_message(LOG_INFO, "[PASS] Account creation succeeded\n");

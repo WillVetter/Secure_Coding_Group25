@@ -7,6 +7,7 @@
 
 #include <stdarg.h>
 #include "db.h"
+#include "banned.h"
 
 // Tests all arguments in account_record_login_success and account_record_login_failure(account_t *acc) are:
 // (1) acc must be non-NULL
@@ -23,7 +24,7 @@ int main() {
         return 1;
     }
     
-    log_message(LOG_INFO, "\nTest 1: Fail logins and check login fail count resets to zero after successful login\n");
+    log_message(LOG_INFO, "Test 1: Fail logins and check login fail count resets to zero after successful login\n");
     for (int i = 0; i < 3; i++) {
         account_record_login_failure(account);
         log_message(LOG_INFO, "Login fail count after attempt %d: %u\n", i + 1, account->login_fail_count);
@@ -34,7 +35,7 @@ int main() {
         }
     }
 
-    log_message(LOG_INFO, "\nTest 2: Simulating successful login\n");
+    log_message(LOG_INFO, "Test 2: Simulating successful login\n");
     account_record_login_success(account, 0x7F000001); // 127.0.0.1 in hex
     log_message(LOG_INFO, "Login fail count after successful login: %u\n", (account->login_fail_count));
     if (account->login_fail_count == 0) {
@@ -43,13 +44,13 @@ int main() {
         log_message(LOG_ERROR, "[FAIL] Login attempt allowed with more than 10 login failures\n");
     }
 
-    log_message(LOG_INFO, "\nTest 3: Simulating failed login attempts exceeding threshold...\n");
+    log_message(LOG_INFO, "Test 3: Simulating failed login attempts exceeding threshold...\n");
     for (int i = 0; i < 10; i++) {
         account_record_login_failure(account);
         log_message(LOG_INFO, "Login fail count after attempt %d: %u\n", i + 1, account->login_fail_count);
     }
 
-    log_message(LOG_INFO, "\nTest 4: Attempt successful login after exceeding failed login threshold...\n");
+    log_message(LOG_INFO, "Test 4: Attempt successful login after exceeding failed login threshold...\n");
     account_record_login_success(account, 0x7F000001); 
     if (account->login_fail_count >= 10) {
         log_message(LOG_INFO, "[PASS] Login attempt blocked due to too many failed attempts\n");
@@ -60,7 +61,7 @@ int main() {
 
     // Handle NULL account
     account = NULL;
-    log_message(LOG_INFO, "\nTest 5: Handle NULL account in login success\n");
+    log_message(LOG_INFO, "Test 5: Handle NULL account in login success\n");
     if (account) {
         log_message(LOG_ERROR, "[FAIL] Account creation accepted NULL account\n");
     } else {

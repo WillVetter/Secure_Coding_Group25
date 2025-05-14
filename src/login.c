@@ -1,3 +1,8 @@
+/**
+ * @file login.c
+ * @brief Implements the login handler, including account lookup, validation, and session initialization.
+ */
+
 #define _POSIX_C_SOURCE 200809L
 #include <string.h>
 #include <unistd.h>
@@ -17,6 +22,12 @@
 #define TIMESTAMP_BUFFER 26
 #define STRINGIFY_IP_BUFFER 16
 
+/**
+ * @brief Convert a `time_t` value into a human-readable string.
+ * @param t The time to convert.
+ * @param buffer The buffer to store the formatted time string.
+ * @param size The size of the buffer.
+ */
 static void get_readable_time(time_t t, char *buffer, size_t size) {
     struct tm *tm_info = localtime(&t);
     if (tm_info) {
@@ -27,11 +38,27 @@ static void get_readable_time(time_t t, char *buffer, size_t size) {
     }
 }
 
+/**
+ * @brief Convert an IPv4 address to a string.
+ * @param ip The 32-bit IPv4 address.
+ * @param buffer The buffer to store the string representation.
+ * @param size The size of the buffer.
+ */
 static void ip4_to_string(ip4_addr_t ip, char *buffer, size_t size) {
     struct in_addr addr = { .s_addr = ip };
     inet_ntop(AF_INET, &addr, buffer, size);
 }
 
+/**
+ * @brief Handle the login process for a user, including authentication and session creation.
+ * @param userid The user ID attempting to log in.
+ * @param password The plaintext password provided by the user.
+ * @param client_ip The IP address of the client attempting to log in.
+ * @param login_time The current time when the login is attempted.
+ * @param client_output_fd File descriptor to send login feedback to the user.
+ * @param session Pointer to the session structure to populate upon successful login.
+ * @return A login_result_t code indicating the result of the login attempt.
+ */
 login_result_t handle_login(const char *userid, const char *password,
                             ip4_addr_t client_ip, time_t login_time,
                             int client_output_fd,

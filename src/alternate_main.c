@@ -1,3 +1,8 @@
+/**
+ * @file alternate_main.c
+ * @brief Standalone test harness for the handle_login function.
+ */
+
 #define _POSIX_C_SOURCE 200809L
 
 #include <unistd.h>

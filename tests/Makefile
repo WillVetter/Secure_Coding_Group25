@@ -41,7 +41,7 @@ $(TESTS): %:
 	@echo "[INFO]  Compiling $@ "
 	$(CC) $(CFLAGS) -o $(BIN_DIR)/$@ $($@_SRC) $(LDFLAGS)
 	@if [ $$? -eq 0 ]; then \
-		echo "[INFO] Running $@..."; \
+		echo "[INFO] Running $@"; \
 		$(BIN_DIR)/$@; \
 	else \
 		echo "[FAIL] Compilation failed for $@"; \

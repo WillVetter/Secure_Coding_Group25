@@ -13,7 +13,6 @@
 #include <sodium.h>
 #include <unistd.h>
 #include <arpa/inet.h>
-#include "banned.h"
 #define STRINGIFY_IP_BUFFER 16
 
 

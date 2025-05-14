@@ -20,6 +20,41 @@
 #define AUTO_BAN_DURATION (10 * 60)
 #define MAX_LOGIN_RETRIES 10
 #define TIMESTAMP_BUFFER 26
+#define STRINGIFY_IP_BUFFER 16
+
+/**
+ * @brief Validate a user input string by checking if all characters are part of an establisehd whitelist.
+ * @param input The input string to validate. 
+ * @return Returns true if valid, false if not.
+ */
+bool validates_input(const char *input) {
+  if (!input) {
+    return false;
+  }
+
+  size_t input_len = strlen(input);
+  const char* allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@.-+";
+
+  for (size_t i = 0; i < input_len; i++) {
+    char c = input[i];
+    if (!strchr(allowed, c)) {
+      log_message(LOG_ERROR, "invalid character in %s at position %i\n", input, i);
+      return false;
+    } 
+  }
+  return true;
+}
+
+/**
+ * @brief Convert an IPv4 address to a string.
+ * @param ip The 32-bit IPv4 address.
+ * @param buffer The buffer to store the string representation.
+ * @param size The size of the buffer.
+ */
+static void ip4_to_strings(ip4_addr_t ip, char *buffer, size_t size) {
+    struct in_addr addr = { .s_addr = ip };
+    inet_ntop(AF_INET, &addr, buffer, size);
+}
 
 /**
  * @brief Convert a `time_t` value into a human-readable string.
@@ -57,7 +92,7 @@ login_result_t handle_login(const char *userid, const char *password,
 
     time_t now = login_time;
     get_readable_time(now, now_str, sizeof(now_str));
-    ip4_to_string(client_ip, ip_str, sizeof(ip_str));
+    ip4_to_strings(client_ip, ip_str, sizeof(ip_str));
 
     // Username is NULL
     if (!userid) {
@@ -73,7 +108,7 @@ login_result_t handle_login(const char *userid, const char *password,
         return LOGIN_FAIL_BAD_PASSWORD;
     }
 
-    if (!validate_input(password)) {
+    if (!validates_input(password)) {
       log_message(LOG_ERROR, "handle_login: invalid input. Only alphanumeric characters, _, @, ., -, + are allowed");
       return LOGIN_FAIL_BAD_PASSWORD;
     }

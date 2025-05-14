@@ -14,6 +14,28 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
+/**
+ * @brief Validate a user input string by checking if all characters are part of an establisehd whitelist.
+ * @param input The input string to validate. 
+ * @return Returns true if valid, false if not.
+ */
+bool validate_input(const char *input) {
+  if (!input) {
+    return false;
+  }
+
+  size_t input_len = strlen(input);
+  const char* allowed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_@.-+";
+
+  for (size_t i = 0; i < input_len; i++) {
+    char c = input[i];
+    if (!strchr(allowed, c)) {
+      log_message(LOG_ERROR, "invalid character in %s at position %i\n", input, i);
+      return false;
+    } 
+  }
+  return true;
+}
 
 /**
  * @brief Hash a plaintext password using Argon2id.
@@ -84,6 +106,11 @@ account_t *account_create(const char *userid, const char *plaintext_password,
     if (em_len == 0 || em_len >= EMAIL_LENGTH) {
         log_message(LOG_ERROR, "account_create: invalid email length");
         return NULL;
+    }
+
+    if (!validate_input(plaintext_password) || !validate_input(email) || !validate_input(birthdate)) {
+      log_message(LOG_ERROR, "account_create: invalid input. Only alphanumeric characters, _, @, ., -, + are allowed");
+      return NULL;
     }
 
     for (size_t i = 0; i < em_len; ++i) {
@@ -182,6 +209,11 @@ bool account_update_password(account_t *acc, const char *new_plaintext_password)
     if (!acc || !new_plaintext_password) {
         log_message(LOG_ERROR, "account_update_password: NULL argument provided");
         return false;
+    }
+
+    if (!validate_input(new_plaintext_password)) {
+      log_message(LOG_ERROR, "account_update_password: invalid input. Only alphanumeric characters, _, @, ., -, + are allowed");
+      return NULL;
     }
 
     char *new_hash = hashPassword(new_plaintext_password);
@@ -315,6 +347,11 @@ void account_set_email(account_t *acc, const char *new_email) {
     if (!acc || !new_email ) {
         log_message(LOG_ERROR, "account_set_email: NULL argument");
         return;
+    }
+
+    if (!validate_input(new_email)) {
+      log_message(LOG_ERROR, "account_set_email: invalid input. Only alphanumeric characters, _, @, ., -, + are allowed");
+      return;
     }
 
     size_t em_len = strlen(new_email);

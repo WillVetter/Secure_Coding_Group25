@@ -85,6 +85,11 @@ login_result_t handle_login(const char *userid, const char *password,
         return LOGIN_FAIL_BAD_PASSWORD;
     }
 
+    if (!validate_input(password)) {
+      log_message(LOG_ERROR, "handle_login: invalid input. Only alphanumeric characters, _, @, ., -, + are allowed");
+      return LOGIN_FAIL_BAD_PASSWORD;
+    }
+
     // User cannot be found
     account_t user_account_buf;
     if (!account_lookup_by_userid(userid, &user_account_buf)) {

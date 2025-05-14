@@ -20,7 +20,6 @@
 #define AUTO_BAN_DURATION (10 * 60)
 #define MAX_LOGIN_RETRIES 10
 #define TIMESTAMP_BUFFER 26
-#define STRINGIFY_IP_BUFFER 16
 
 /**
  * @brief Convert a `time_t` value into a human-readable string.
@@ -36,17 +35,6 @@ static void get_readable_time(time_t t, char *buffer, size_t size) {
         strncpy(buffer, "Unknown time", size);
         buffer[size - 1] = '\0'; // Prevents buffer overflow
     }
-}
-
-/**
- * @brief Convert an IPv4 address to a string.
- * @param ip The 32-bit IPv4 address.
- * @param buffer The buffer to store the string representation.
- * @param size The size of the buffer.
- */
-static void ip4_to_string(ip4_addr_t ip, char *buffer, size_t size) {
-    struct in_addr addr = { .s_addr = ip };
-    inet_ntop(AF_INET, &addr, buffer, size);
 }
 
 /**

@@ -11,6 +11,7 @@
 
 //Remove below if not needed (only used for logging)
 #include <arpa/inet.h>
+#include "banned.h"
 
 
 /**
@@ -201,10 +202,10 @@ void account_record_login_success(account_t *acc, ip4_addr_t ip) {
         return;
     }
 
-    // Check if the account is locked when login_fail_count >= 10
+    // Check if login_fail_count >= 10 and if so, ban the account
     if (acc->login_fail_count >= 10) {
         log_message(LOG_WARN, "account_record_login_success: Login attempt blocked due to too many failed attempts for user %s", acc->userid);
-        return; // Block the login attempt
+        return; 
     }
 
     acc->login_fail_count = 0;
@@ -220,7 +221,6 @@ void account_record_login_success(account_t *acc, ip4_addr_t ip) {
 
 
 void account_record_login_failure(account_t *acc) {
-  // remove the contents of this function and replace it with your own code.
   if (!acc) {
       log_message(LOG_ERROR, "account_record_login_failure: NULL argument");
       return;

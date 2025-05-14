@@ -7,7 +7,6 @@
 #include "login.h"
 #include "logging.h"
 #include "db.h"
-#include "banned.h"
 
 // 2 hour session duration. Would change depending on policy.
 #define SESSION_DURATION_LIMIT (2 * 3600)
@@ -22,7 +21,7 @@ static void get_readable_time(time_t t, char *buffer, size_t size) {
     if (tm_info) {
         strftime(buffer, size, "%Y-%m-%d %H:%M:%S", tm_info);
     } else {
-        strncpy(buffer, "Unknown time", size);
+        snprintf(buffer, size, "%.*s", (int)(size - 1), "Unknown time");
         buffer[size - 1] = '\0'; // Prevents buffer overflow
     }
 }
@@ -36,9 +35,10 @@ login_result_t handle_login(const char *userid, const char *password,
                             ip4_addr_t client_ip, time_t login_time,
                             int client_output_fd,
                             login_session_data_t *session) {
-    char now_str[TIMESTAMP_BUFFER];
-    char unban_str[TIMESTAMP_BUFFER];
-    char ip_str[STRINGIFY_IP_BUFFER];
+    // Safe with zero-initialized.
+    char now_str[TIMESTAMP_BUFFER] = {0};
+    char unban_str[TIMESTAMP_BUFFER] = {0};
+    char ip_str[STRINGIFY_IP_BUFFER] = {0};
 
     time_t now = login_time;
     get_readable_time(now, now_str, sizeof(now_str));
